@@ -1,0 +1,35 @@
+* Build
+#+BEGIN_SRC bash
+export DISTRIBUTION=bookworm
+
+docker build \
+    --build-arg DISTRIBUTION=${DISTRIBUTION} \
+    -t cf-warp:$(curl -s https://pkg.cloudflareclient.com/dists/${DISTRIBUTION}/main/binary-amd64/Packages | awk '/^Version:/ {print $2}') \
+     .
+#+END_SRC
+
+* Run
+#+BEGIN_SRC bash
+# if automated install
+mkdir -p /path/to/cloudflare-warp
+cat << EOF > /path/to/cloudflare-warp/mdm.xml
+<dict>
+  <key>organization</key>
+  <string>diaochayanjiu-iich</string>
+  <key>auth_client_id</key>
+  <string>XXX</string>
+  <key>auth_client_secret</key>
+  <string>XXX</string>
+</dict>
+EOF
+
+
+docker run --name cf-warp \
+       -d --restart always \
+       -v /path/to/cloudflare-warp:/var/lib/cloudflare-warp \
+       --cap-add SYS_RESOURCE --network host \
+       cf-warp
+
+
+docker exec -it cf-warp warp-cli <COMMAND>
+#+END_SRC
